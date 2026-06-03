@@ -19,6 +19,7 @@ app.use(totalReq)
 
 app.get("/requestCount", function(req, res){
     res.send({
+
         totalRequests: reqCount     //idhar reqCount ke value ko return bhej diye 
     });
 });
@@ -28,3 +29,4 @@ app.get("/asd", function(req,res){
 });
 
 app.listen(3000);
+
