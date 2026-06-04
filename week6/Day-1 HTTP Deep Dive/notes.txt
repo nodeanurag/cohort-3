@@ -28,3 +28,280 @@ Notes:
 6. Tokens vs. JWTs
     - Stateful tokens require storing token data in a variable or database. This necessitates a database request every time the user accesses an authenticated endpoint, leading to potential inefficiencies.
     - JWTs are compact and self-contained, representing information between two parties. They are stateless, containing all the information needed to authenticate a request within the token itself. This means the server does not need to store session data, as all necessary data is included in the token.
+
+
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Here are detailed, structured notes on JSON Web Tokens (JWT) that are ready to be copied and pasted into your `notes.txt` file.
+
+---
+
+# JSON Web Token (JWT) - Comprehensive Notes
+
+## 1. What is a JWT?
+
+* **Definition:** JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object.
+* **Security:** The information can be verified and trusted because it is digitally signed.
+* **Signing Methods:** JWTs can be signed using a secret (with the HMAC algorithm) or a public/private key pair using RSA or ECDSA.
+
+---
+
+## 2. Structure of a JWT
+
+A JWT is represented as a string with three parts separated by dots (`.`):
+**Format:** `Header.Payload.Signature`
+
+### A. Header
+
+* Typically consists of two parts:
+1. `alg`: The signing algorithm being used (e.g., HMAC SHA256 or RSA).
+2. `typ`: The type of the token (JWT).
+
+
+* *Example (Base64Url encoded):* `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9`
+
+### B. Payload
+
+* Contains the **claims** (statements about an entity, typically the user, and additional data).
+* **Types of Claims:**
+1. **Registered claims:** Predefined claims recommended for interoperability (e.g., `iss` [issuer], `exp` [expiration time], `sub` [subject], `aud` [audience]).
+2. **Public claims:** Custom claims defined by those using JWTs. They should be registered in the IANA JSON Web Token Registry to avoid collisions.
+3. **Private claims:** Custom claims created to share information between parties that agree on using them.
+
+
+* *Note:* The payload is readable by anyone. **Do not put sensitive information (like passwords) here.**
+
+### C. Signature
+
+* Used to verify that the sender of the JWT is who it says it is and to ensure the message wasn't changed along the way.
+* **Creation:** To create the signature, you take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that.
+* *Pseudo-code:* `HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)`
+
+---
+
+## 3. How JWT Authentication Works (The Flow)
+
+1. **User Logs In:** The client sends credentials (e.g., username/password) to the server.
+2. **Server Validates & Creates JWT:** The server verifies the credentials. If valid, the server creates a JWT with a secret key and returns it to the client.
+3. **Client Stores JWT:** The client stores the JWT locally (usually in `localStorage`, `sessionStorage`, or an `HttpOnly` cookie).
+4. **Client Requests Data:** For subsequent requests to protected routes, the client includes the JWT, typically in the HTTP `Authorization` header using the Bearer schema.
+* *Header format:* `Authorization: Bearer <token>`
+
+
+5. **Server Verifies & Responds:** The server verifies the token's signature using its secret key. If valid, it grants access to the protected resource.
+
+---
+
+## 4. Primary Use Cases
+
+* **Authorization:** The most common scenario. Once logged in, subsequent requests include the JWT, allowing access to routes, services, and resources permitted with that token (e.g., Single Sign-On).
+* **Information Exchange:** A secure way to transmit information between parties. Because they are signed, you can be sure the senders are who they say they are and that the content hasn't been tampered with.
+
+---
+
+## 5. Pros and Cons
+
+### Advantages
+
+* **Stateless:** The server doesn't need to store session data in a database. All necessary information is in the token itself.
+* **Scalable:** Easier to scale horizontally across multiple servers because there is no session state to synchronize.
+* **Cross-Domain / CORS:** Works well across different domains and subdomains since it relies on HTTP headers rather than strictly relying on cookies.
+* **Mobile Ready:** Great for mobile applications where traditional cookie-based sessions can be cumbersome.
+
+### Disadvantages
+
+* **Cannot be easily invalidated:** Once a JWT is issued, it remains valid until it expires. Revoking access immediately (e.g., if an account is compromised) requires extra architecture (like a token blocklist).
+* **Payload Size:** As you add more claims, the token grows in size, which increases the overhead of every HTTP request.
+* **Security Risks if Misconfigured:** Weak secret keys, ignoring expiration dates, or accepting the `none` algorithm can lead to severe vulnerabilities.
+
+---
+
+## 6. Best Practices for Implementation
+
+1. **Keep it Secret:** Use strong, long, and unpredictable secret keys for signing.
+2. **Short Expiration (`exp`):** Give tokens a short lifespan (e.g., 15-30 minutes) to minimize the window of opportunity if a token is stolen.
+3. **Use Refresh Tokens:** Implement a refresh token mechanism. The short-lived JWT is used for access, and a longer-lived refresh token (stored securely) is used to get new JWTs.
+4. **Store Securely on Client:** Avoid `localStorage` if possible due to Cross-Site Scripting (XSS) risks. `HttpOnly`, `Secure` cookies are generally safer for web apps.
+5. **Use HTTPS/SSL:** Always transmit JWTs over encrypted connections to prevent man-in-the-middle (MITM) attacks.
+6. **Validate on the Server:** Never trust the payload blindly. Always verify the signature and the `exp` claim on the server before granting access.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Here are practical code examples for implementing JWTs in a few common environments. You can append these directly to your notes.
+
+---
+
+# JWT Code Examples
+
+## 1. Node.js (Express + `jsonwebtoken` package)
+
+First, you would install the necessary packages: `npm install express jsonwebtoken`
+
+### Generating a Token (Login Route)
+
+```javascript
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const app = express();
+app.use(express.json());
+
+// In production, ALWAYS use an environment variable for the secret key!
+const SECRET_KEY = 'your_super_secret_key_here'; 
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // 1. Authenticate user (mocked here)
+    if (username === 'admin' && password === 'password123') {
+        
+        // 2. Create Payload (Claims)
+        const payload = {
+            sub: 1, // user ID
+            username: username,
+            role: 'admin'
+        };
+
+        // 3. Sign the JWT
+        const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
+        return res.json({ message: 'Login successful', token: token });
+    }
+
+    return res.status(401).json({ message: 'Invalid credentials' });
+});
+
+```
+
+### Verifying a Token (Middleware for Protected Routes)
+
+```javascript
+// Middleware function to protect routes
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    
+    // Extract token from "Bearer <token>" format
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401); // Unauthorized if no token
+
+    // Verify the token
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403); // Forbidden if token is invalid/expired
+        
+        // Attach decoded payload to request object
+        req.user = user; 
+        next(); // Proceed to the protected route
+    });
+};
+
+// A Protected Route
+app.get('/dashboard', authenticateToken, (req, res) => {
+    res.json({ 
+        message: `Welcome to the dashboard, ${req.user.username}!`,
+        userData: req.user
+    });
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
+
+```
+
+---
+
+## 2. Python (FastAPI + `PyJWT` package)
+
+First, install the packages: `pip install fastapi uvicorn pyjwt`
+
+```python
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+import jwt
+import datetime
+
+app = FastAPI()
+
+SECRET_KEY = "your_super_secret_key_here"
+ALGORITHM = "HS256"
+
+# FastAPI utility to extract token from Authorization header
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+@app.post("/login")
+def login():
+    # 1. Authenticate user (mocked)
+    
+    # 2. Create Payload with expiration
+    expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    payload = {
+        "sub": "user123",
+        "exp": expiration
+    }
+    
+    # 3. Sign the JWT
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return {"access_token": token, "token_type": "bearer"}
+
+# Dependency to verify token
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.get("/dashboard")
+def protected_route(current_user: dict = Depends(get_current_user)):
+    return {"message": "Access granted", "user": current_user}
+
+```
+
+---
+
+## 3. Client-Side (Vanilla JavaScript Fetch API)
+
+This shows how a frontend application stores the token and attaches it to subsequent requests.
+
+### Storing and Using the Token
+
+```javascript
+// 1. Logging in and saving the token
+async function loginUser(username, password) {
+    const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        // Store in localStorage (Note: HttpOnly cookies are safer in production)
+        localStorage.setItem('jwtToken', data.token); 
+        console.log('Logged in successfully');
+    }
+}
+
+// 2. Making an authenticated request to a protected route
+async function getDashboardData() {
+    // Retrieve token from storage
+    const token = localStorage.getItem('jwtToken');
+
+    const response = await fetch('/dashboard', {
+        method: 'GET',
+        headers: {
+            // Attach token in the Authorization header using Bearer schema
+            'Authorization': `Bearer ${token}` 
+        }
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        console.log('Protected data:', data);
+    } else {
+        console.error('Failed to fetch protected data. Token might be invalid/expired.');
+    }
+}
+
+```
