@@ -14,6 +14,7 @@ function logger (req, res,next){            //yeh ek logger middleware bnay jo b
     next();
 }
 
+
 app.get("/", function(req, res){            //frontend part ko idhar se connect kr diya like jaise hi localhost:3000 search krenge backend server strt krne ke badd then woh yeh file ko return krega 
     res.sendFile(__dirname + "/public/index.html");
 })
