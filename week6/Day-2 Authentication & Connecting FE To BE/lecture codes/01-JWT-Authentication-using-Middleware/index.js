@@ -85,12 +85,12 @@ app.get("/me",logger, auth, function(req, res){
         }
     }
 
+
     res.json({
         username: foundUser.username,
         password: foundUser.password
     })
 })
-
 app.listen(3000);
 
 
