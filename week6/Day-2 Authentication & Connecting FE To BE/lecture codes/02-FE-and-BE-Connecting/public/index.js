@@ -85,3 +85,19 @@ function auth(req, res, next) {
         res.status(401).json({ message: "Failed to authenticate token" });
     }
 }
+
+app.get("/me", logger, auth, function(req, res) {
+    const foundUser = users.find(user => user.username === req.username);           //yeh loop ki trah hai middleware se pass hue req.username ko leke check rha hai..arrow function hai ki function agrument pe user diye aur usse chcek kr rhe user.username wahi req.username hai ki nahi aur usko foundUser pe store kr diye hai
+    
+    if (!foundUser) {                                                   //agar foundUser nhi hai toh yeh status show kro message ke sath
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({                                                          //and if its there then return this data as a response of it.
+        username: foundUser.username,
+        password: foundUser.password
+    });
+});
+
+
+app.listen(3000);
