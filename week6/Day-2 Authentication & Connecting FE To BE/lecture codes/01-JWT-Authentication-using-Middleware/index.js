@@ -57,3 +57,19 @@ app.post("/signin",logger, function(req, res){
     }
 
 })
+
+function auth(req, res, next){              //And this is the authentication middleware jaise pichle wale mein hmlog localhost:3000/me mtln get wle mein sab yeh authentication wla kaam kr rhe the jo username, password return kr rha tha yha woh kam yeh kr rha hai as a middleware 
+    const token = req.headers.token;
+    const decodedData = jwt.verify(token, JWT_SECRET);
+
+    if(decodedData.username){
+        req.username = decodedData.username;
+        next()
+    }
+    else{
+        res.json({
+            message: "You are not logged in!"
+        })
+    }
+}
+
