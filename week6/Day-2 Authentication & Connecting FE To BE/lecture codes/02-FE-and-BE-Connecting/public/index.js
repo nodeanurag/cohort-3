@@ -64,3 +64,24 @@ app.post("/signin", logger, function(req, res){         //signin ke liye yeh rou
         });
     }
 });
+
+function auth(req, res, next) {
+    const token = req.headers.token;                    //header se token lega yeh aur token variable pe store kr rha hai
+    if (!token) {                                       //agar token nahi hai toh ..yeh status code aur message show kr do
+        return res.status(401).json({ message: "Token is missing" });
+    }
+    
+
+    //aur yha try catch kro ki try kro yeh wrna error ayega toh yeh
+    try {
+        const decodedData = jwt.verify(token, JWT_SECRET);      //yaha se token se woh username ko nikal rhe hai jo phle hmlg encode kiye the isliye same secret key se verify kr rhe ki kya hai wahi username hai ya nahi
+        if (decodedData.username) {                             //aur if decodedData.username hai toh yeh kro
+            req.username = decodedData.username;                //yeh req.username pe isliye store kiye hai decodedData ko isliye kyuki req aur res abko access kr skte toh yeh data sabhi pe easily pass ho jaye
+            next();                                             //aur yeh niche wle method ko call kr diya 
+        } else {                                                //aur woh decodedData nhi hua toh yeh return kro
+            res.status(401).json({ message: "Invalid token" });
+        }
+    } catch (error) {                                           //warna kuch error aye toh yeh status and message return kr do 
+        res.status(401).json({ message: "Failed to authenticate token" });
+    }
+}
