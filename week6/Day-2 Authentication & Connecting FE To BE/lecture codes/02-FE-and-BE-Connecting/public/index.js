@@ -17,3 +17,19 @@ function logger (req, res,next){            //yeh ek logger middleware bnay jo b
 app.get("/", function(req, res){            //frontend part ko idhar se connect kr diya like jaise hi localhost:3000 search krenge backend server strt krne ke badd then woh yeh file ko return krega 
     res.sendFile(__dirname + "/public/index.html");
 })
+
+app.post("/signup",logger, function(req, res){          //signup ke liye route..axios jo hmlog use kiye FE pe woh idhar se data ko le lega fetch krega data yaha se 
+    
+    //username and password yaha se input le rha hai woh jo user provide kr rha hai 
+    const username = req.body.username;
+    const password = req.body.password;
+
+
+    users.push({                                        //yeh gobal array pe data store kr diye hai..uspe yeh datas push krke 
+        username:username,
+        password:password
+    });
+    res.json({
+        message:"Signed in successfully!"
+    });
+})
