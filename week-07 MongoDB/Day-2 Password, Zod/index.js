@@ -88,3 +88,17 @@ app.post("/signin", async function(req, res){
     }
 });
 
+
+//jaise hi middleware sab kuch pass kr dega so the controll will reach here in todo and todos routes
+app.post("/todo", auth, async function(req, res){          //Yeh todos ko add krne ke liye hai 
+    const userId = req.userId;                      //middleware ke pass se jo req.userId jispe decodedData ka id hai woh idhr pass on hua 
+    const title = req.body.title                    //yaha se title input denge 
+    await TodoModel.create({                        //database call isliye await kiye
+        title,                                      //TodoModel wale collection mein yeh create ho jyega 
+        userId,
+        done
+    })
+    res.json({
+        message: "Todo created!"
+    })
+});
