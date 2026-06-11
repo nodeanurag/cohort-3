@@ -54,3 +54,37 @@ app.post("/signup", async function(req, res){
         });
     }    
 });
+
+
+
+app.post("/signin", async function(req, res){
+    const email = req.body.email;
+    const password = req.body.password;
+
+    const user = await UserModel.findOne({              //userModel se search krega ki yeh username hai ya nhi and hai toh sirf email lega kyuki password ab nahi lega kyuki is barr password hashed ho chuka hai ..plain password se alag hai
+        email: email
+    })
+    const passwordMatch = await bcrypt.compare(password, user.password);      //isse compare kr rhe hai ki hashed pass done same hui ya nahi... aur isko bhi await krwana pdega..
+
+    if(!user){
+        res.status(403).json({
+            "message": "User not found in database"
+        })
+        return
+    }
+
+    if(passwordMatch){                          //if password match hua toh yeh niche ka kaam hoga warna else return kr dega                            //if uses is there ..then generate the jwt token
+        const token = jwt.sign({
+            id: user._id.toString()                      //sare users ka ek id hoga User collection mai jo sabke liye alg hoga ..isliye is barr hmlog user._id ko sign krenge aur token generate idhar se krwaynge...aur isko string mein convert kr rhe hai..kyuki id mongoDb mein object ID hota hai 
+        }, JWT_SECRET);
+        res.json({
+            token: token
+        });
+    }
+    else{
+        res.status(403).json({
+            message: "Incorrect Credentials"
+        })
+    }
+});
+
