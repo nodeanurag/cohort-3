@@ -55,3 +55,17 @@ app.post("/todo",async function(req, res){
     })
 
 });
+app.get("/todos", auth, async function(req, res){           //yeh kaunsa todo kis user ka hai woh return krne k liye..ki like kaunsa userId pe kya kya todo hai yeh btayega woh
+    const userId = req.userId;                              //middleware ke pass se jo req.userId jispe decodedData ka id hai woh idhr pass on hua 
+    
+    const todos = await TodoModel.find({                    //userId se woh todos ko search kr lega for this specific id provided to it
+        userId
+    })
+    
+    res.json({
+        todo                                                //todos jo milnge woh output pe milenge 
+    })
+
+});
+
+
