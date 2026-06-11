@@ -1,28 +1,26 @@
+const express = require("express");
+const {userModel, todoModel} = require("./db");
+const jwt = require("jsonwebtoken");
+const jwtSecret = "shivajitheboss";
 const mongoose = require("mongoose");
-const schema = mongoose.Schema;
-const objectId = schema.ObjectId;
+
+const app = express();
+ mongoose.connect("mongodb+srv://username:password@cluster0.76azs3u.mongodb.net/todo-app")
+const app = express();
+app.use(express.json());
 
 
+app.post("/signup", async function(req, res){
+    const email = req.body.email;
+    const password = req.body.password;
+    const name = req.body.name;
 
-const user = new schema({
-    email: {type: string, unique: true},
-    password: string,
-    name: string,
-    
+    await userModel.create({
+        email: email,
+        password: password,
+        name: name
+    });
+    res.json({
+        message: "user created"
+    })
 });
-
-const todo = new schema({
-    title: string,
-    description: string,
-    done: boolean,
-    userId: {type: objectId, ref: "user"}
-
-});
-
-const userModel = mongooose.model('user', user);
-const todoModel = mongooose.model('todo', todo);
-
-module.exports = {
-    userModel: userModel,
-    todoModel: todoModel
-}
