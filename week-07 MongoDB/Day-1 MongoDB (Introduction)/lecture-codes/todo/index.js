@@ -24,3 +24,21 @@ app.post("/signup", async function(req, res){
         message: "user created"
     })
 });
+
+app.post("/signin", async function (req, res){
+    const email = req.body.email;
+    const password = req.body.password;
+
+    const user = await userModel.findOne({email: email, password: password});
+    if (user){
+        const token = jwt.sign({id: user._id.tostring()}, jwtSecret);
+
+        res.json({token: token});
+
+    }
+    else{
+        res.status(403).json({
+            message: "invalid credentials"
+        })
+    }
+});
