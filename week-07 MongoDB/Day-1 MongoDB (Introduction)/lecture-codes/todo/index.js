@@ -42,3 +42,16 @@ app.post("/signin", async function (req, res){
         })
     }
 });
+
+app.post("/todo",async function(req, res){
+    const userId =req.body.userId;
+    const title = req.body.title;
+    const done = req.body.done;
+    await TodoModel.create({
+        title, userId, done
+    });
+    res.json({
+        message: "todo created"
+    })
+
+});
