@@ -115,3 +115,32 @@ app.get("/todos", auth, async function(req, res){           //yeh kaunsa todo ki
     })
 
 });
+
+
+
+function auth(req, res, next){                              //same auth fucntion which was used before 
+    const token = req.headers.token
+
+    const decodedData = jwt.verify(token, JWT_SECRET)
+
+    if(decodedData){
+        req.userId = decodedData.id;                         //User Id ko decodedData se le rhe hia idhar 
+        next();
+    }
+    else{
+        req.status(403).json({
+            message: "Incorrect Credentials !"
+        })
+    }
+}
+
+
+app.listen(3000);
+
+
+
+/*
+Notes:
+Here we are using Zod library for the input validation - 
+    - Input validation se jisse pata chal paye ki mko user se body mein teen cheex chahiye toh utna hi input de aur jo string mein chahiye toh string input kre na ki ko object input kre 
+*/    
