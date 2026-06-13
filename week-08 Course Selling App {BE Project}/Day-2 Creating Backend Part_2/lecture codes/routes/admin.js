@@ -121,3 +121,49 @@ adminRouter.post("/signin", async function(req, res){
         });
     }
 });
+
+
+
+
+
+// Define the admin routes for creating a course
+adminRouter.post("/course", adminMiddleware, async function(req,res) {
+    // Get the adminId from the request object
+    const adminId = req.adminId;
+
+    // Validate the request body data using zod schema
+    const requireBody = z.object({
+        title: z.string().min(3),
+        description: z.string().min(10),
+        imageUrl: z.string().url(),
+        price: z.number().positive(),
+    });
+    // Parse and validate the request body data
+    const parseDataWithSuccess = requireBody.safeParse(req.body);
+
+    // If the data format is incorrect, send an error message to the client
+    if(!parseDataWithSuccess){
+        return res.json({
+            message: "Incorrect data format",
+            error: parseDataWithSuccess.error,
+        });
+    }
+
+    // Get title, description, imageURL, price from the request body
+    const {title,description,imageUrl,price} = req.body;
+
+    // Create a new course with the given title, description, imageURL, price, creatorId
+    const course = await courseModel.create({
+        title:title,
+        description:description,
+        imageUrl:imageUrl,
+        price:price,
+        creatorId:adminId,
+    });
+
+    // Respond with a success message if the course is created successfully
+    res.status(201).json({
+        message: "Course Created",
+        courseId: course._id,
+    });
+});
