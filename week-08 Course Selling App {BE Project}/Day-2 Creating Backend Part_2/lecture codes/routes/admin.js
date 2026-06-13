@@ -63,3 +63,61 @@ adminRouter.post("/signup", async function(req, res){
         message: "Sign-up Successfull"
     });
 });
+
+
+
+// POST route for admin signin
+adminRouter.post("/signin", async function(req, res){
+
+    // Validate the request body data using zod schema(email,password must be valid)
+    const requireBody = z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+    });
+
+    // Parse and validate the request body data
+    const parseDataWithSuccess = requireBody.safeParse(req.body);
+    // If the data format is incorrect, send an error message to the client
+    if(!parseDataWithSuccess){
+        return res.json({
+            message: "Incorrect data format",
+            error: parseDataWithSuccess.error,
+        });
+    }
+
+    // Get the email and password from the request body
+    const {email,password} = req.body;
+    
+    // Find the admin with the given email
+    const admin = await adminModel.findOne({
+        email:email,
+    });
+
+    // If the admin is not found, send an error message to the client
+    if(!admin){
+        return res.status(403).json({
+            message: "Invalid credentials",
+        });
+    }
+
+    // Compare the password with the hashed password using the bcrypt.compare() method
+    const passwordMatched = await bcrypt.compare(password, admin.password);
+
+    // If password matches, generate a jwt token and return it
+    if(passwordMatched){
+        // Create a jwt token with the admin's id and the secret key
+        const token = jwt.sign({
+            id: admin._id
+        }, JWT_ADMIN_PASSWORD);
+
+        // Send the token to the client
+        res.status(200).json({
+            token:token,
+        });
+    }else{
+        // If the password does not match, send an error message to the client
+        res.status(403).json({
+            message: "Invalid credentials!"
+        });
+    }
+});
