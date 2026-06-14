@@ -244,3 +244,69 @@
         <span>real-time update</span> <span>•</span> <span> smooth animations</span><span>  By Anurag jha</span>
     </div>
 </div>
+
+
+
+<script>
+    (function() {
+        // get reference to the button
+        const button = document.getElementById('btn');
+        
+        // Helper to apply a subtle animation class on each click (CSS enhancement)
+        const addClickFeedback = (element) => {
+            if (!element) return;
+            element.classList.add('click-animation');
+            // remove class after animation ends to allow re-trigger
+            setTimeout(() => {
+                element.classList.remove('click-animation');
+            }, 200);
+        };
+        
+        // Main counter logic: increments the numeric value shown in button text
+        // Maintains exact original format: "Counter X" where X is the count
+        const incrementCounter = () => {
+            // get current text content from button
+            const currentText = button.innerText;
+            
+            // split by space -> parts[0] = "Counter", parts[1] = current number
+            // if somehow text format changes, fallback gracefully
+            const parts = currentText.split(' ');
+            // ensure we have valid structure, else start from 0
+            let currentValue = 0;
+            if (parts.length >= 2) {
+                const parsed = parseInt(parts[1], 10);
+                if (!isNaN(parsed)) {
+                    currentValue = parsed;
+                }
+            }
+            
+            // increment counter
+            const newValue = currentValue + 1;
+            
+            // update button text with standard format
+            button.innerText = `Counter ${newValue}`;
+            
+            // add micro-interaction (visual pulse + tactile)
+            addClickFeedback(button);
+            
+            // (optional) console log for debugging (clean, but not intrusive)
+            // can be removed in production, but shows pattern
+            console.log(`🖱️ Counter updated: ${newValue}`);
+        };
+        
+        // Attach event listener for clicks (clean, modern, no inline onclick)
+        if (button) {
+            button.addEventListener('click', incrementCounter);
+        } else {
+            console.warn('Button with id "btn" not found');
+        }
+        
+        // extra: double-check initial state to match exactly "Counter 0"
+        // ensure button text is exactly "Counter 0" if somehow modified (safety)
+        if (button && button.innerText.trim() !== "Counter 0") {
+            button.innerText = "Counter 0";
+        }
+    })();
+</script>
+</body>
+</html>
